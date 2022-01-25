@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de alumnos</title>
+    <link rel="stylesheet" href="./css/bootstrap.min.css">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body>
+    <form action="/guardar_registros" method="POST">
+        <div id="container">
+            <br>
+            <center><h1>Captura de alumnos</h1></center>
+            <br>
+            <div class="container">
+                <div class="row">
+                    <div class="col-sm">
+                        Matricula
+                    </div>
+                    <div class="col-sm">
+                        Nombre
+                    </div>
+                    <div class="col-sm">
+                        Sexo
+                    </div>
+                    <div class="col-sm">
+                        Materias
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm">
+                        <input type="number" id="matricula" name="matricula" required>
+                    </div>
+                    <div class="col-sm">
+                        <input type="text" id="nombre" name="nombre" maxlength="30" required>
+                    </div>
+                    <div class="col-sm">
+                        <input type="text" id="sexo" name="sexo" maxlength="1" required>
+                    </div>
+                    <div class="col-sm">
+                        <input type="text" id="ma1" name="ma1" maxlength="20">
+                        <br><br>
+                        <input type="text" id="ma2" name="ma2" maxlength="20">
+                        <br><br>
+                        <input type="text" id="ma3" name="ma3" maxlength="20">
+                    </div>
+                </div>
+            </div>
+            <center>
+                <button id="btnGuardar" type="button" class="btn btn-primary">Guardar</button>
+                <button id="btnLimpiar" type="reset" class="btn btn-secondary">Limpiar</button>
+                <button id="btnBuscar" type="button" class="btn border">Buscar</button>  
+            </center>
+        </div>
+    </form>
+    <center><h1>Listado de alumnos</h1></center>
+    <br>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm">
+                Matricula
+            </div>
+            <div class="col-sm">
+                Nombre
+            </div>
+            <div class="col-sm">
+                Sexo
+            </div>
+            <div class="col-sm">
+                Materias
+            </div>
+        </div>
+        <div class="container" id="Contenedor-Listado" name="Contenedor-Listado">
+
+    </div>
+    <script>
+        function listarAlumnos(){
+            fetch('/leer_registros',{method:'GET'})
+            .then(res => res.json())
+            .then(data => {
+                const lista = document.querySelector('#Contenedor-Listado');
+                let salidaHtml = '';
+
+                data.alumnos.forEach(alumno => {
+                salidaHtml += `<div class="row">`
+                salidaHtml += `<div class="col-sm"> ${alumno.matricula}</div>`;
+                salidaHtml += `<div class="col-sm"> ${alumno.nombre}</div>`;
+                salidaHtml += `<div class="col-sm"> ${alumno.sexo}</div>`;
+                salidaHtml += `<div class="col-sm"> ${alumno.ma1}, ${alumno.ma2}, ${alumno.ma3}</div></div></div>`;
+                });
+
+                lista.innerHTML = salidaHtml;
+            });
+        }
+
+        const btnSumit = document.querySelector("#btnGuardar")
+        btnSumit.addEventListener('click',() => {
+
+            const matricula = document.querySelector("#matricula").value;
+            const nombre = document.querySelector("#nombre").value;
+            const sexo = document.querySelector("#sexo").value;
+            const ma1 = document.querySelector("#ma1").value;
+            const ma2 = document.querySelector("#ma2").value;
+            const ma3 = document.querySelector("#ma3").value;
+
+            if(nombre.trim() === '' || matricula === '' || sexo === '') return false;
+
+            fetch('/guardar_registros',{
+                method:'POST',
+                headers:{'Content-type':'application/json'},
+                body:JSON.stringify({matricula:matricula,nombre:nombre,sexo:sexo,ma1:ma1,ma2:ma2,ma3:ma3})
+            })
+            .then(res=>res.text())
+            .then(data=>{
+
+                listarAlumnos();
+
+            })
+        })
+
+        listarAlumnos();
+        
+        const btnSearch = document.querySelector("#btnBuscar")
+        btnSearch.addEventListener('click',() => {
+
+            const matricula = document.querySelector("#matricula").value;
+
+            if(matricula.trim() === '' ){
+                return false;
+            }
+            else{
+                fetch('/leer_registros', {method: 'GET'})
+		        .then(res => res.json())
+		        .then(data => {
+			        const lista = document.querySelector('#Contenedor-Listado');
+                    var existe = '';
+			        let salidaHtml = '';
+
+                    data.alumnos.forEach(alumnos =>{
+                        if(matricula === alumnos.matricula){
+
+                            document.querySelector("#nombre").value = alumnos.nombre;
+                            document.querySelector("#sexo").value = alumnos.sexo;
+                            document.querySelector("#ma1").value = alumnos.ma1;
+                            document.querySelector("#ma2").value = alumnos.ma2;
+                            document.querySelector("#ma3").value = alumnos.ma3;
+
+                            salidaHtml += `<div class = "row">` // Renglon
+                            salidaHtml += `<div class="col-sm"> ${alumnos.matricula}</div>` // Columna
+                            salidaHtml += `<div class="col-sm"> ${alumnos.nombre}</div>`
+                            salidaHtml += `<div class="col-sm"> ${alumnos.sexo}</div>`
+                            salidaHtml += `<div class="col-sm"> ${alumnos.ma1}, ${alumnos.ma2}, ${alumnos.ma3} </div></div></div>`
+                            existe = 'si';
+                        }
+                    });
+                if(existe != 'si'){
+                    salidaHtml += `<h3 class="text-center mt-5">Registro no existe</h3>`
+                }
+                lista.innerHTML = salidaHtml
+                });
+            }
+        });
+    </script>    
+</body>
+</html>
